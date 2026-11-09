@@ -16,6 +16,7 @@
 <section id="screen-library" class="screen">
   <header class="top">
     <h1>만트라 플레이어</h1>
+    <button id="reorder-btn" class="reorder-btn" type="button" hidden>순서 바꾸기</button>
   </header>
   <p id="temp-notice" class="notice" hidden>이 브라우저에서는 목록이 저장되지 않아요</p>
   <p id="desktop-notice" class="notice" hidden>화면이 작게 보이면 크롬 오른쪽 위 <b>⋮</b> 메뉴에서 <b>데스크톱 사이트</b> 체크를 꺼 주세요.</p>
@@ -23,9 +24,6 @@
   <input id="file-input" type="file" accept="video/*,audio/*" multiple hidden>
   <p class="hint">카톡에서 받은 파일은 보통 Movies/KakaoTalk(동영상) 또는 Download/KakaoTalk(음성·기타)에 있어요. 카톡에서 먼저 '저장'을 눌러 주세요.</p>
   <p id="empty" class="empty" hidden>아직 추가한 파일이 없어요.<br>위의 <b>＋ 파일 추가</b>를 눌러 만트라 파일을 골라 주세요.</p>
-  <div class="library-tools">
-    <button id="reorder-btn" class="reorder-btn" type="button" hidden>순서 바꾸기</button>
-  </div>
   <ul id="library-list" class="library"></ul>
   <details class="help">
     <summary>화면을 끄면 재생이 멈추나요?</summary>

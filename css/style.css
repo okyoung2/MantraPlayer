@@ -208,8 +208,14 @@ h3 { font-size: 15px; color: var(--muted); font-weight: 600; margin: 24px 0 8px;
 .help ol { padding-left: 20px; }
 
 /* 목록 순서 바꾸기 */
-.library-tools { display: flex; justify-content: flex-end; margin-top: 16px; }
-.reorder-btn { min-height: 44px; padding: 8px 18px; font-size: 15px; color: var(--muted); }
+#screen-library .top { gap: 12px; }
+#screen-library .library { margin-top: 16px; }
+/* 순서를 바꾸는 동안에는 제목 줄(완료 버튼)이 화면 위에 붙어 있다. */
+#screen-library.reordering .top {
+  position: sticky; top: 0; z-index: 2;
+  background: var(--bg); padding: 8px 0; margin: -8px 0 0;
+}
+.reorder-btn { margin-left: auto; flex-shrink: 0; min-height: 44px; padding: 8px 18px; font-size: 15px; color: var(--muted); }
 .reorder-btn.done { background: var(--accent); color: var(--bg); font-weight: 700; }
 .library.editing .item { outline: 2px dashed rgba(224, 168, 60, 0.5); outline-offset: -2px; }
 .library.editing .item-main { cursor: default; }

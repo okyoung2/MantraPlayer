@@ -98,6 +98,7 @@ function renderLibrary() {
   if (items.length < 2 && reordering) { reordering = false; $('reorder-btn').classList.remove('done'); $('reorder-btn').textContent = '순서 바꾸기'; }
   $('reorder-btn').hidden = items.length < 2;
   list.classList.toggle('editing', reordering);
+  $('screen-library').classList.toggle('reordering', reordering);
   items.forEach((item, index) => {
     if (reordering) {
       list.append(reorderRow(item, index));
