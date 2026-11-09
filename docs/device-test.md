@@ -1,6 +1,6 @@
-# 만트라 반복 재생 — 휴대폰 시험 순서표
+# 만트라 플레이어 — 휴대폰 시험 순서표
 
-주소: https://okyoung2.github.io/aviPlayCounter/
+주소: https://okyoung2.github.io/mantraPlayer/
 시험 기기: 갤럭시 퀀텀5 (SM-A556S), Chrome
 
 각 항목을 해 보고 □에 ✔ 표시를 해 주세요. 안 되는 항목은 "메모"에 어떤 일이 있었는지 적어 주세요.

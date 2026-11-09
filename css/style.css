@@ -111,7 +111,7 @@ h3 { font-size: 15px; color: var(--muted); font-weight: 600; margin: 24px 0 8px;
   background: var(--surface); border-radius: var(--radius);
 }
 .switch input { width: 26px; height: 26px; accent-color: var(--accent); order: 2; }
-#start-btn { margin-top: 28px; }
+
 
 /* 재생 */
 .player {
@@ -216,3 +216,20 @@ h3 { font-size: 15px; color: var(--muted); font-weight: 600; margin: 24px 0 8px;
 .move { display: flex; flex-direction: column; gap: 6px; }
 .move button { width: 52px; height: 40px; font-size: 18px; padding: 0; }
 .move button:disabled { opacity: 0.3; cursor: default; }
+
+/* 설정 화면은 휴대폰 한 화면에 들어오게 촘촘하게(갤럭시 퀀텀5 기준 약 384×695). */
+#screen-setup { padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: 0; }
+#screen-setup .top { min-height: 40px; margin-bottom: 0; }
+#screen-setup .top .link { min-height: 40px; padding-top: 4px; padding-bottom: 4px; }
+#screen-setup .file-name { font-size: 18px; margin: 0; }
+#screen-setup h3 { margin: 12px 0 6px; }
+#screen-setup .chip { min-height: 42px; padding: 6px 12px; }
+#screen-setup .chips { gap: 6px; }
+#screen-setup .setup-rate { min-height: 44px; }
+#screen-setup .switch { min-height: 44px; margin-bottom: 6px; }
+/* 시작 버튼은 늘 화면 아래에 보이게 붙여 둔다. */
+#start-btn {
+  position: sticky; bottom: max(12px, env(safe-area-inset-bottom));
+  margin: 14px 0 max(12px, env(safe-area-inset-bottom)); min-height: 54px;
+  box-shadow: 0 0 0 12px var(--bg); /* 스크롤되는 내용이 버튼 둘레로 비치지 않게 */
+}
