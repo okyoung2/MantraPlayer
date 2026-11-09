@@ -216,6 +216,16 @@ export function createPlayer({ audio, video, lastAlertSrc, doneAlertSrc }) {
       for (const el of Object.values(alerts)) el.volume = level;
     },
 
+    // 0.5~3 배속. 소리와 영상에 함께 적용한다. 새 파일을 불러와도 유지되게 기본값도 바꾼다.
+    // preservesPitch 기본값(true) 덕분에 빠르게 해도 목소리 높낮이는 그대로다.
+    setRate(r) {
+      const rate = Math.min(3, Math.max(0.5, r));
+      for (const el of [audio, video]) {
+        el.defaultPlaybackRate = rate;
+        el.playbackRate = rate;
+      }
+    },
+
     playAlert(which) {
       const el = alerts[which];
       if (!el) return;

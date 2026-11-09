@@ -11,10 +11,26 @@ export function kindOf(mimeType, fileName) {
   return null;
 }
 
-// 즐겨찾기 먼저, 각 묶음 안에서는 최근 추가순.
-export function sortLibrary(items) {
+// 즐겨찾기 먼저. 각 묶음 안에서는 사용자가 정한 순서(order: 파일 id 목록)를 따르고,
+// 순서를 정한 뒤에 새로 추가한 파일은 묶음 맨 위에 최근 추가순으로 놓는다.
+export function sortLibrary(items, order = []) {
+  const rank = new Map(order.map((id, i) => [id, i]));
+  const r = (it) => (rank.has(it.id) ? rank.get(it.id) : -1);
   return [...items].sort((a, b) =>
-    (b.favorite === true) - (a.favorite === true) || b.addedAt - a.addedAt);
+    (b.favorite === true) - (a.favorite === true)
+    || r(a) - r(b)
+    || b.addedAt - a.addedAt);
+}
+
+// 정렬된 목록에서 index 의 파일을 한 칸 옮긴 새 순서(id 목록). 즐겨찾기 묶음 경계는 넘지 않는다.
+// 옮길 수 없으면 null.
+export function moveItem(sorted, index, delta) {
+  const to = index + delta;
+  if (to < 0 || to >= sorted.length) return null;
+  if ((sorted[index].favorite === true) !== (sorted[to].favorite === true)) return null;
+  const ids = sorted.map((it) => it.id);
+  [ids[index], ids[to]] = [ids[to], ids[index]];
+  return ids;
 }
 
 export function isDuplicate(items, file) {

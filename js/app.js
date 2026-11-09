@@ -1,7 +1,8 @@
 import { openStore, createMemoryStore } from './store.js';
-import { sortLibrary } from './library.js';
+import { sortLibrary, moveItem } from './library.js';
 import {
   PRESETS, CORNERS, CORNER_ARROWS, parseCustomCount, resolveSettings, targetOf, describeSettings,
+  RATE_MIN, RATE_MAX, clampRate, formatRate,
 } from './settings.js';
 import { formatElapsed, progressRatio } from './format.js';
 import { createPlayer } from './player.js';
@@ -65,15 +66,43 @@ function el(tag, props = {}, ...children) {
 // ---- 목록 ----
 
 async function refreshLibrary() {
-  items = sortLibrary(await store.listItems());
+  const [list, order] = await Promise.all([store.listItems(), store.getOrder().catch(() => [])]);
+  items = sortLibrary(list, order);
   renderLibrary();
+}
+
+// 순서 바꾸기: 버튼을 누르면 각 파일 옆에 ▲▼ 가 나오고, 그동안 파일을 눌러도 열리지 않는다.
+let reordering = false;
+
+function setReordering(on) {
+  reordering = on;
+  pendingDeleteId = null;
+  $('reorder-btn').classList.toggle('done', on);
+  $('reorder-btn').textContent = on ? '완료' : '순서 바꾸기';
+  renderLibrary();
+}
+
+async function moveLibraryItem(index, delta) {
+  const ids = moveItem(items, index, delta);
+  if (!ids) return;
+  const byId = new Map(items.map((it) => [it.id, it]));
+  items = ids.map((id) => byId.get(id));
+  renderLibrary();
+  await store.setOrder(ids).catch(() => {});
 }
 
 function renderLibrary() {
   const list = $('library-list');
   list.replaceChildren();
   $('empty').hidden = items.length > 0;
-  for (const item of items) {
+  if (items.length < 2 && reordering) { reordering = false; $('reorder-btn').classList.remove('done'); $('reorder-btn').textContent = '순서 바꾸기'; }
+  $('reorder-btn').hidden = items.length < 2;
+  list.classList.toggle('editing', reordering);
+  items.forEach((item, index) => {
+    if (reordering) {
+      list.append(reorderRow(item, index));
+      return;
+    }
     const meta = item.durationSec ? formatElapsed(item.durationSec * 1000) : '';
     const li = el('li', { class: 'item' },
       el('span', { class: 'item-kind', 'aria-label': item.kind === 'video' ? '동영상' : '음성' },
@@ -107,7 +136,25 @@ function renderLibrary() {
         el('button', { type: 'button', onclick: () => { pendingDeleteId = null; renderLibrary(); } }, '취소')));
     }
     list.append(li);
-  }
+  });
+}
+
+function reorderRow(item, index) {
+  const canMove = (delta) => moveItem(items, index, delta) !== null;
+  return el('li', { class: 'item' },
+    el('span', { class: 'item-kind', 'aria-label': item.kind === 'video' ? '동영상' : '음성' },
+      item.kind === 'video' ? '🎬' : '🎵'),
+    el('div', { class: 'item-main' },
+      el('span', { class: 'item-name' }, `${item.favorite ? '★ ' : ''}${item.name}`)),
+    el('div', { class: 'move' },
+      ...[['▲', -1, '위로'], ['▼', 1, '아래로']].map(([label, delta, aria]) => {
+        const b = el('button', {
+          type: 'button', 'aria-label': `${item.name} ${aria}`,
+          onclick: () => moveLibraryItem(index, delta),
+        }, label);
+        b.disabled = !canMove(delta);
+        return b;
+      })));
 }
 
 async function toggleFavorite(item) {
@@ -183,12 +230,15 @@ function renderSetup() {
     renderSetup();
   }, CORNER_NAMES[c])));
 
+  showRate('setup-', draft.rate);
   $('last-alert').checked = draft.lastAlert;
   $('done-alert').checked = draft.doneAlert;
 }
 
 function draftSettings() {
-  return { count: draft.count, corner: draft.corner, lastAlert: draft.lastAlert, doneAlert: draft.doneAlert };
+  return {
+    count: draft.count, corner: draft.corner, lastAlert: draft.lastAlert, doneAlert: draft.doneAlert, rate: draft.rate,
+  };
 }
 
 async function saveSettings(item, settings) {
@@ -269,6 +319,42 @@ function applyVolume(percent) {
   $('volume-icon').textContent = percent === 0 ? '🔇' : '🔊';
 }
 
+// 배속 막대는 설정 화면(prefix 'setup-')과 재생 화면(prefix '')에 하나씩 있다.
+// 막대 값은 소수 오차를 피하려고 10배한 정수(5~30)다.
+function showRate(prefix, rate) {
+  const r = clampRate(rate);
+  $(`${prefix}rate`).value = Math.round(r * 10);
+  $(`${prefix}rate-value`).textContent = formatRate(r);
+  $(`${prefix}rate-down`).disabled = r <= RATE_MIN;
+  $(`${prefix}rate-up`).disabled = r >= RATE_MAX;
+}
+
+// onChange(rate, commit): 끄는 동안은 commit=false, 손을 떼거나 −/+ 를 누르면 true.
+function bindRate(prefix, onChange) {
+  const input = $(`${prefix}rate`);
+  input.addEventListener('input', () => onChange(clampRate(Number(input.value) / 10), false));
+  input.addEventListener('change', () => onChange(clampRate(Number(input.value) / 10), true));
+  for (const [suffix, delta] of [['rate-down', -0.1], ['rate-up', 0.1]]) {
+    $(`${prefix}${suffix}`).addEventListener('click', () => {
+      onChange(clampRate(Number(input.value) / 10 + delta), true);
+    });
+  }
+}
+
+// 재생 중에 바꾼 배속은 그 파일의 설정에 저장한다. 다른 파일의 배속은 그대로다.
+function setSessionRate(rate, commit) {
+  if (!session) return;
+  session.settings.rate = rate;
+  player.setRate(rate);
+  showRate('', rate);
+  showControls();
+  if (!commit) return;
+  const { item } = session;
+  const settings = { ...session.settings };
+  item.settings = settings;
+  store.updateItem(item.id, { settings }).catch(() => {}).then(refreshLibrary);
+}
+
 // 전체 화면은 더블클릭(휴대폰은 두 번 탭)으로만 켜고 끈다.
 // 자동으로 켜면 크롬이 '전체 화면을 종료하려면…' 안내를 띄우는데, 웹 페이지에서는 그 안내를 끌 수 없다.
 function enterFullscreen() {
@@ -313,6 +399,8 @@ async function startPlaybackOnce(item, settings) {
   session = { item, settings, counter, stopwatch, tick: setInterval(updateBadge, 500), playing: false };
   lastSession = { item, settings };
 
+  player.setRate(settings.rate);
+  showRate('', settings.rate);
   $('badge').className = `badge ${settings.corner}`;
   $('video').hidden = item.kind !== 'video';
   $('audio-title').hidden = item.kind === 'video';
@@ -428,6 +516,12 @@ function bindEvents() {
   $('volume').addEventListener('change', (e) => {
     store.setVolume(Number(e.target.value) / 100).catch(() => {});
   });
+  bindRate('', setSessionRate);
+  bindRate('setup-', (rate) => {
+    draft.rate = rate;
+    showRate('setup-', rate);
+  });
+  $('reorder-btn').addEventListener('click', () => setReordering(!reordering));
   $('again-btn').addEventListener('click', () => {
     if (lastSession) startPlayback(lastSession.item, lastSession.settings);
   });

@@ -83,6 +83,7 @@ export function createMemoryStore() {
   const blobs = new Map();
   let lastUsed = null;
   let volume = null;
+  let order = [];
   return {
     async listItems() { return [...items.values()].map((it) => ({ ...it })); },
     addFiles: serialized((files) =>
@@ -107,6 +108,8 @@ export function createMemoryStore() {
     async setLastUsed(settings) { lastUsed = settings; },
     async getVolume() { return volume; },
     async setVolume(v) { volume = v; },
+    async getOrder() { return [...order]; },
+    async setOrder(ids) { order = [...ids]; },
     close() {},
   };
 }
@@ -183,6 +186,18 @@ export async function openStore(dbName = 'mantra-player') {
     async setVolume(v) {
       const tx = db.transaction('meta', 'readwrite');
       tx.objectStore('meta').put(v, 'volume');
+      await txDone(tx);
+    },
+
+    // 목록 순서(파일 id 목록). 정한 적이 없으면 빈 목록.
+    async getOrder() {
+      const saved = await get('meta', 'order');
+      return Array.isArray(saved) ? saved : [];
+    },
+
+    async setOrder(ids) {
+      const tx = db.transaction('meta', 'readwrite');
+      tx.objectStore('meta').put(ids, 'order');
       await txDone(tx);
     },
 

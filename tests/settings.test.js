@@ -1,11 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseCustomCount, resolveSettings, targetOf, describeSettings, DEFAULT_SETTINGS, PRESETS, CORNERS } from '../js/settings.js';
+import { parseCustomCount, resolveSettings, targetOf, describeSettings, clampRate, formatRate, DEFAULT_SETTINGS, PRESETS, CORNERS } from '../js/settings.js';
 
 test('constants match the spec', () => {
-  assert.deepEqual(PRESETS, [3, 9, 11, 27, 54, 108]);
+  assert.deepEqual(PRESETS, [1, 3, 9, 11, 27, 54, 108]);
   assert.deepEqual(CORNERS, ['top-left', 'top-right', 'bottom-left', 'bottom-right']);
-  assert.deepEqual(DEFAULT_SETTINGS, { count: 108, corner: 'top-right', lastAlert: true, doneAlert: true });
+  assert.deepEqual(DEFAULT_SETTINGS, { count: 108, corner: 'top-right', lastAlert: true, doneAlert: true, rate: 1 });
 });
 
 test('parseCustomCount', () => {
@@ -16,8 +16,8 @@ test('parseCustomCount', () => {
 });
 
 test('resolveSettings prefers item, then last used, then defaults', () => {
-  const item = { count: 9, corner: 'bottom-left', lastAlert: false, doneAlert: true };
-  const last = { count: 27, corner: 'top-left', lastAlert: true, doneAlert: false };
+  const item = { count: 9, corner: 'bottom-left', lastAlert: false, doneAlert: true, rate: 1.5 };
+  const last = { count: 27, corner: 'top-left', lastAlert: true, doneAlert: false, rate: 1 };
   assert.deepEqual(resolveSettings(item, last), item);
   assert.deepEqual(resolveSettings(null, last), last);
   assert.deepEqual(resolveSettings(null, null), DEFAULT_SETTINGS);
@@ -37,4 +37,26 @@ test('describeSettings summarizes count, corner and alerts', () => {
   assert.equal(
     describeSettings({ count: 7, corner: 'top-left', lastAlert: true, doneAlert: false }),
     '7회 · ↖ · 🔔 마지막 ON · 완료 OFF');
+});
+
+test("rate belongs to each file: not taken from another file's last settings", () => {
+  const last = { count: 27, corner: 'top-left', lastAlert: true, doneAlert: false, rate: 2.5 };
+  assert.equal(resolveSettings(null, last).rate, 1);
+  assert.equal(resolveSettings(null, last).count, 27);
+  // 배속이 생기기 전에 저장된 설정은 1배속.
+  assert.equal(resolveSettings({ count: 9, corner: 'top-left', lastAlert: true, doneAlert: true }, null).rate, 1);
+  assert.equal(resolveSettings({ rate: 2.3 }, last).rate, 2.3);
+});
+
+test('clampRate keeps 0.1 steps between 0.5 and 3', () => {
+  assert.equal(clampRate(1.25), 1.3);
+  assert.equal(clampRate(1.1 + 0.1), 1.2);
+  assert.equal(clampRate(0.1), 0.5);
+  assert.equal(clampRate(5), 3);
+  assert.equal(clampRate(undefined), 1);
+  assert.equal(formatRate(2), '2.0×');
+});
+
+test('describeSettings shows the rate only when it is not 1x', () => {
+  assert.equal(describeSettings({ ...DEFAULT_SETTINGS, rate: 1.5 }), '108회 · 1.5× · ↗ · 🔔 마지막 ON · 완료 ON');
 });

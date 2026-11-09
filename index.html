@@ -23,6 +23,9 @@
   <input id="file-input" type="file" accept="video/*,audio/*" multiple hidden>
   <p class="hint">카톡에서 받은 파일은 보통 Movies/KakaoTalk(동영상) 또는 Download/KakaoTalk(음성·기타)에 있어요. 카톡에서 먼저 '저장'을 눌러 주세요.</p>
   <p id="empty" class="empty" hidden>아직 추가한 파일이 없어요.<br>위의 <b>＋ 파일 추가</b>를 눌러 만트라 파일을 골라 주세요.</p>
+  <div class="library-tools">
+    <button id="reorder-btn" class="reorder-btn" type="button" hidden>순서 바꾸기</button>
+  </div>
   <ul id="library-list" class="library"></ul>
   <details class="help">
     <summary>화면을 끄면 재생이 멈추나요?</summary>
@@ -48,6 +51,14 @@
     <span>회</span>
   </div>
   <p id="custom-error" class="error" hidden>1~9999 사이 숫자를 넣어 주세요</p>
+
+  <h3>재생 속도</h3>
+  <div class="volume rate setup-rate">
+    <button id="setup-rate-down" class="rate-step" type="button" aria-label="느리게">−</button>
+    <input id="setup-rate" type="range" min="5" max="30" step="1" value="10" aria-label="재생 속도">
+    <button id="setup-rate-up" class="rate-step" type="button" aria-label="빠르게">+</button>
+    <span id="setup-rate-value" class="volume-value rate-value">1.0×</span>
+  </div>
 
   <h3>횟수 표시 위치</h3>
   <div id="corner-chips" class="chips corners" role="radiogroup" aria-label="횟수 표시 위치"></div>
@@ -82,6 +93,12 @@
       <input id="volume" type="range" min="0" max="100" step="1" value="100" aria-label="볼륨">
       <span id="volume-value" class="volume-value">100</span>
     </label>
+    <div id="rate-row" class="volume rate">
+      <button id="rate-down" class="rate-step" type="button" aria-label="느리게">−</button>
+      <input id="rate" type="range" min="5" max="30" step="1" value="10" aria-label="재생 속도">
+      <button id="rate-up" class="rate-step" type="button" aria-label="빠르게">+</button>
+      <span id="rate-value" class="volume-value rate-value">1.0×</span>
+    </div>
   </div>
 </section>
 
