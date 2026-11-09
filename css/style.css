@@ -40,7 +40,7 @@ button:focus-visible, input:focus-visible { outline: 3px solid var(--accent); ou
 
 .primary { background: var(--accent); color: var(--accent-text); font-weight: 700; }
 .secondary { background: var(--surface-2); }
-.link { background: none; color: var(--muted); padding-left: 0; }
+.link { background: none; color: var(--accent); font-weight: 700; padding-left: 0; }
 .wide { display: block; width: 100%; }
 .big { font-size: 20px; min-height: 60px; }
 
