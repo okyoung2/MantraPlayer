@@ -208,7 +208,7 @@ h3 { font-size: 15px; color: var(--muted); font-weight: 600; margin: 24px 0 8px;
 .help ol { padding-left: 20px; }
 
 /* 목록 순서 바꾸기 */
-.library-tools { display: flex; justify-content: flex-end; margin-top: 16px; }
+.library-tools { display: flex; justify-content: flex-end; margin-top: 16px; position: relative; top: -5px; }
 .reorder-btn { min-height: 44px; padding: 8px 18px; font-size: 15px; color: var(--muted); }
 .reorder-btn.done { background: var(--accent); color: var(--bg); font-weight: 700; }
 .library.editing .item { outline: 2px dashed rgba(224, 168, 60, 0.5); outline-offset: -2px; }
